@@ -1,0 +1,208 @@
+---
+// src/components/GenArtPiece.astro
+const { id, title, gridClass } = Astro.props;
+---
+
+<figure class={`art-piece ${gridClass}`}>
+  <div class="art-container">
+    <canvas id={`canvas-${id}`} class="size-full"></canvas>
+
+    <div class="art-overlay">
+      <h3 class="art-title">{title}</h3>
+      <a href={`/art/${id}`} class="view-full">View Full</a>
+    </div>
+  </div>
+</figure>
+
+<script define:vars={{ id }}>
+  // Load the art script for this piece
+  const canvas = document.getElementById(`canvas-${id}`);
+  const ctx = canvas.getContext("2d");
+
+  // Set canvas size
+  function resizeCanvas() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
+  }
+
+  resizeCanvas();
+  window.addEventListener("resize", resizeCanvas);
+
+  // Load the specific art script based on ID
+  async function loadArtScript() {
+    try {
+      // Import the script content for this piece
+      const scriptPath = `/src/assets/art/${id}/script.js`;
+
+      // For now, we'll inline the art logic
+      // You would replace this with your actual art code
+      switch (id) {
+        case "piece1":
+          initFlowingParticles();
+          break;
+        case "piece2":
+          initGeometricWaves();
+          break;
+        case "animals":
+          initAnimals();
+          break;
+        case "circles":
+          initCircles();
+          break;
+      }
+    } catch (error) {
+      console.error(`Failed to load art script for ${id}:`, error);
+    }
+  }
+
+  // Example art functions - replace with your actual code
+  function initFlowingParticles() {
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const time = Date.now() * 0.001;
+
+      for (let i = 0; i < 50; i++) {
+        const x = (Math.sin(time + i * 0.1) * 0.3 + 0.5) * canvas.width;
+        const y = (Math.cos(time + i * 0.15) * 0.3 + 0.5) * canvas.height;
+        ctx.fillStyle = `hsl(${(time * 50 + i * 10) % 360}, 70%, 50%)`;
+        ctx.beginPath();
+        ctx.arc(x, y, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+  function initGeometricWaves() {
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const time = Date.now() * 0.002;
+      ctx.strokeStyle = "#4f46e5";
+      ctx.lineWidth = 2;
+
+      for (let i = 0; i < 5; i++) {
+        ctx.beginPath();
+        for (let x = 0; x < canvas.width; x += 5) {
+          const y =
+            canvas.height / 2 + Math.sin(x * 0.01 + time + i * 0.5) * 50;
+          if (x === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+  function initAnimals() {
+    // Replace this with your actual animals.html JavaScript code
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const time = Date.now() * 0.001;
+
+      // Placeholder: draw some moving "animals" (circles)
+      const colors = ["#ff6b6b", "#4ecdc4", "#45b7d1", "#f9ca24"];
+      for (let i = 0; i < 10; i++) {
+        const x = (Math.sin(time + i * 0.5) * 0.3 + 0.5) * canvas.width;
+        const y = (Math.cos(time * 0.7 + i * 0.3) * 0.3 + 0.5) * canvas.height;
+        ctx.fillStyle = colors[i % colors.length];
+        ctx.beginPath();
+        ctx.arc(x, y, 15, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+  function initCircles() {
+    // Replace this with your actual circles.html JavaScript code
+    function animate() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const time = Date.now() * 0.002;
+
+      // Placeholder: draw expanding circles
+      for (let i = 0; i < 5; i++) {
+        const centerX = canvas.width / 2;
+        const centerY = canvas.height / 2;
+        const radius = (Math.sin(time + i * 0.5) * 0.3 + 0.5) * 100;
+
+        ctx.strokeStyle = `hsla(${(time * 50 + i * 60) % 360}, 70%, 50%, 0.7)`;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+  loadArtScript();
+</script>
+
+<style>
+  .art-piece {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .art-piece:hover {
+    transform: scale(1.02);
+  }
+
+  .art-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: 200px;
+  }
+
+  .art-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+    color: white;
+    padding: 1rem;
+    transform: translateY(100%);
+    transition: transform 0.3s ease;
+  }
+
+  .art-piece:hover .art-overlay {
+    transform: translateY(0);
+  }
+
+  .art-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+  }
+
+  .view-full {
+    color: #fbbf24;
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition: color 0.3s ease;
+  }
+
+  .view-full:hover {
+    color: #f59e0b;
+  }
+
+  canvas {
+    display: block;
+    background: #1f2937;
+  }
+</style>

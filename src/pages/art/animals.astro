@@ -1,0 +1,36 @@
+---
+// src/pages/art/animals.astro (example for one of your pieces)
+import Layout from "../../layout/Layout.astro";
+---
+
+<Layout>
+  <title>Animals - Generative Art</title>
+
+  <div class="container mx-auto">
+    <nav>
+      <a href="/" class="text-blue-400 hover:text-blue-300">← Back to Gallery</a
+      >
+    </nav>
+  </div>
+
+  <h1 class="text-4xl font-bold mb-8 text-center">Animals</h1>
+
+  <!-- Full-size art canvas -->
+  <div class="bg-gray-800 rounded-lg overflow-hidden mb-8">
+    <canvas id="main-canvas" class="w-full h-96"></canvas>
+  </div>
+
+  <!-- Art description -->
+  <div class="bg-white rounded-lg p-6 shadow-md">
+    <h2 class="text-2xl font-bold mb-4">About This Piece</h2>
+    <p class="text-gray-700 leading-relaxed">
+      This generative art piece explores organic movement patterns inspired by
+      animal behavior. Using algorithmic processes, it creates flowing,
+      life-like movements that evoke the essence of creatures in motion.
+    </p>
+  </div>
+</Layout>
+
+<script>
+  // Your actual animals.html JavaScript code goes here
+</script>

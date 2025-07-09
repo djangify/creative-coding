@@ -1,0 +1,167 @@
+// Geometric Waves - piece2/sketch.js
+let time = 0;
+let waves = [];
+let numWaves = 8;
+let pattern = 0; // 0 = sine waves, 1 = square waves, 2 = triangle waves
+let colorMode = 0; // 0 = rainbow, 1 = monochrome, 2 = sunset
+let amplitude = 80;
+let frequency = 0.02;
+
+function setup() {
+  let canvas = createCanvas(800, 600);
+  canvas.parent('sketch-container');
+  colorMode(HSB, 360, 100, 100);
+
+  // Initialize waves
+  for (let i = 0; i < numWaves; i++) {
+    waves.push({
+      yOffset: height / 2 + (i - numWaves / 2) * 30,
+      phase: i * 0.5,
+      speed: 0.02 + i * 0.005,
+      amplitude: amplitude * (0.5 + i * 0.1),
+      frequency: frequency * (1 + i * 0.1)
+    });
+  }
+
+  background(220, 20, 15);
+}
+
+function draw() {
+  // Create trailing effect
+  fill(220, 20, 15, 0.1);
+  noStroke();
+  rect(0, 0, width, height);
+
+  time += 0.02;
+
+  // Draw waves
+  for (let i = 0; i < waves.length; i++) {
+    let wave = waves[i];
+    drawWave(wave, i);
+  }
+
+  // Draw connecting lines between waves
+  stroke(60, 80, 90, 0.3);
+  strokeWeight(1);
+  for (let x = 0; x < width; x += 20) {
+    for (let i = 0; i < waves.length - 1; i++) {
+      let y1 = getWaveY(waves[i], x);
+      let y2 = getWaveY(waves[i + 1], x);
+      line(x, y1, x, y2);
+    }
+  }
+}
+
+function drawWave(wave, index) {
+  strokeWeight(2);
+
+  // Set color based on color mode
+  let hue = getWaveColor(index);
+  stroke(hue, 70, 90, 0.8);
+
+  // Draw main wave
+  noFill();
+  beginShape();
+  for (let x = 0; x <= width; x += 2) {
+    let y = getWaveY(wave, x);
+    vertex(x, y);
+  }
+  endShape();
+
+  // Draw glowing effect
+  strokeWeight(4);
+  stroke(hue, 50, 100, 0.3);
+  beginShape();
+  for (let x = 0; x <= width; x += 4) {
+    let y = getWaveY(wave, x);
+    vertex(x, y);
+  }
+  endShape();
+
+  // Draw wave peaks
+  fill(hue, 60, 100, 0.6);
+  noStroke();
+  for (let x = 0; x <= width; x += 40) {
+    let y = getWaveY(wave, x);
+    ellipse(x, y, 8, 8);
+  }
+}
+
+function getWaveY(wave, x) {
+  let baseY = wave.yOffset;
+  let waveValue;
+
+  switch (pattern) {
+    case 0: // Sine waves
+      waveValue = sin(x * wave.frequency + time * wave.speed + wave.phase);
+      break;
+    case 1: // Square waves
+      waveValue = sin(x * wave.frequency + time * wave.speed + wave.phase) > 0 ? 1 : -1;
+      break;
+    case 2: // Triangle waves
+      waveValue = (2 / PI) * asin(sin(x * wave.frequency + time * wave.speed + wave.phase));
+      break;
+  }
+
+  return baseY + waveValue * wave.amplitude;
+}
+
+function getWaveColor(index) {
+  switch (colorMode) {
+    case 0: // Rainbow
+      return (index * 45 + time * 20) % 360;
+    case 1: // Monochrome
+      return 200 + index * 10;
+    case 2: // Sunset
+      return 20 + index * 15;
+    default:
+      return 180;
+  }
+}
+
+function changePattern() {
+  pattern = (pattern + 1) % 3;
+}
+
+function toggleColors() {
+  colorMode = (colorMode + 1) % 3;
+}
+
+function resetAnimation() {
+  time = 0;
+  background(220, 20, 15);
+}
+
+function mousePressed() {
+  // Add ripple effect at mouse position
+  for (let i = 0; i < waves.length; i++) {
+    let distance = abs(mouseY - waves[i].yOffset);
+    if (distance < 100) {
+      waves[i].amplitude = amplitude * 1.5;
+
+      // Reset amplitude after a short time
+      setTimeout(() => {
+        waves[i].amplitude = amplitude * (0.5 + i * 0.1);
+      }, 500);
+    }
+  }
+}
+
+function keyPressed() {
+  if (key === 'r' || key === 'R') {
+    resetAnimation();
+  } else if (key === 'p' || key === 'P') {
+    changePattern();
+  } else if (key === 'c' || key === 'C') {
+    toggleColors();
+  }
+}
+
+function windowResized() {
+  resizeCanvas(800, 600);
+
+  // Recalculate wave positions
+  for (let i = 0; i < waves.length; i++) {
+    waves[i].yOffset = height / 2 + (i - numWaves / 2) * 30;
+  }
+}
