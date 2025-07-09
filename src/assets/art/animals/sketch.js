@@ -30,7 +30,7 @@ function createAnimals(count) {
 }
 
 function draw() {
-  background(240, 255, 240); // Light green background
+  background(240, 240, 250, 30); // Light  background
 
   // Display score
   fill(50);

@@ -1,0 +1,215 @@
+---
+import Layout from "../../layout/Layout.astro";
+---
+
+<Layout>
+  <title>Circles - Generative Art</title>
+
+  <div class="container mx-auto mt-8">
+    <nav>
+      <a href="/" class="text-blue-400 hover:text-blue-300">← Back to Gallery</a
+      >
+    </nav>
+  </div>
+
+  <h1 class="text-4xl font-bold mb-8 text-center">CIRCLES</h1>
+
+  <!-- Full-size art canvas (will be created by p5.js) -->
+
+  <div
+    id="sketch-container"
+    class="bg-gray-800 rounded-lg overflow-hidden mb-8 h-[800px] relative"
+  >
+    <!-- p5.js will insert its canvas here -->
+  </div>
+
+  <!-- Load p5.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
+  ></script>
+
+  <!-- Inline sketch -->
+  <script is:inline>
+    let circles = [];
+    const numCircles = 80;
+    let specialCircle;
+    let centerX, centerY;
+
+    function setup() {
+      const container = document.getElementById("sketch-container");
+      const w = container.offsetWidth;
+      const h = container.offsetHeight;
+      createCanvas(w, h).parent(container);
+
+      centerX = width / 2;
+      centerY = height / 2;
+
+      specialCircle = new SpecialCircle(
+        centerX,
+        centerY,
+        70,
+        color(255, 100, 150),
+      );
+
+      for (let i = 0; i < numCircles; i++) {
+        let angle = random(TWO_PI);
+        let radius = random(150, 300);
+        let x = centerX + cos(angle) * radius;
+        let y = centerY + sin(angle) * radius;
+
+        circles.push(
+          new Circle(
+            x,
+            y,
+            random(60, 120),
+            color(random(100, 255), random(100, 200), random(150, 255), 180),
+          ),
+        );
+      }
+    }
+
+    function draw() {
+      background(240, 240, 250, 30);
+
+      specialCircle.update();
+      specialCircle.display();
+
+      for (let circle of circles) {
+        if (!mouseIsPressed) {
+          circle.attractToSpecial(specialCircle);
+        }
+        circle.update();
+        circle.display();
+      }
+    }
+
+    class Circle {
+      constructor(x, y, size, color) {
+        this.x = x;
+        this.y = y;
+        this.targetX = x;
+        this.targetY = y;
+        this.vx = 0;
+        this.vy = 0;
+        this.size = size;
+        this.color = color;
+        this.speed = random(0.03, 0.08);
+        this.maxForce = random(5, 12);
+        this.friction = 0.95;
+      }
+
+      attractToSpecial(specialCircle) {
+        let dx = specialCircle.x - this.x;
+        let dy = specialCircle.y - this.y;
+        let distance = sqrt(dx * dx + dy * dy);
+
+        if (distance > specialCircle.size / 2 + this.size / 2) {
+          let strength = 0.01;
+          this.vx += dx * strength;
+          this.vy += dy * strength;
+        }
+      }
+
+      update() {
+        let d = dist(mouseX, mouseY, this.x, this.y);
+        let repulsionRadius = 100 + this.size;
+
+        if (d < repulsionRadius) {
+          let angle = atan2(this.y - mouseY, this.x - mouseX);
+          let force = map(d, 0, repulsionRadius, this.maxForce, 0);
+          this.vx += cos(angle) * force;
+          this.vy += sin(angle) * force;
+        }
+
+        this.x += this.vx;
+        this.y += this.vy;
+
+        this.vx *= this.friction;
+        this.vy *= this.friction;
+
+        if (this.x < this.size / 2) {
+          this.x = this.size / 2;
+          this.vx *= -0.8;
+        } else if (this.x > width - this.size / 2) {
+          this.x = width - this.size / 2;
+          this.vx *= -0.8;
+        }
+
+        if (this.y < this.size / 2) {
+          this.y = this.size / 2;
+          this.vy *= -0.8;
+        } else if (this.y > height - this.size / 2) {
+          this.y = height - this.size / 2;
+          this.vy *= -0.8;
+        }
+      }
+
+      display() {
+        let speed = sqrt(this.vx * this.vx + this.vy * this.vy);
+        let shadowOffset = map(speed, 0, 10, 0, 5);
+
+        noStroke();
+        fill(0, 0, 0, 20);
+        ellipse(this.x + shadowOffset, this.y + shadowOffset, this.size);
+
+        noStroke();
+        fill(this.color);
+        ellipse(this.x, this.y, this.size);
+      }
+    }
+
+    class SpecialCircle extends Circle {
+      constructor(x, y, size, borderColor) {
+        super(x, y, size, color(0, 0, 0, 0));
+        this.borderColor = borderColor;
+        this.borderWeight = 4;
+        this.maxForce = 2;
+      }
+
+      update() {
+        if (mouseIsPressed) {
+          this.x = mouseX;
+          this.y = mouseY;
+        } else {
+          this.x = lerp(this.x, centerX, 0.02);
+          this.y = lerp(this.y, centerY, 0.02);
+        }
+      }
+
+      display() {
+        noFill();
+        stroke(this.borderColor);
+        strokeWeight(this.borderWeight);
+        ellipse(this.x, this.y, this.size);
+
+        for (let i = 3; i > 0; i--) {
+          stroke(
+            red(this.borderColor),
+            green(this.borderColor),
+            blue(this.borderColor),
+            20 / i,
+          );
+          strokeWeight(this.borderWeight + i * 3);
+          ellipse(this.x, this.y, this.size);
+        }
+      }
+    }
+
+    function windowResized() {
+      const container = document.getElementById("sketch-container");
+      const w = container.offsetWidth;
+      const h = container.offsetHeight;
+      resizeCanvas(w, h);
+      centerX = w / 2;
+      centerY = h / 2;
+    }
+  </script>
+
+  <!-- Art description -->
+  <div class="bg-white rounded-lg mt-8 mb-8 p-6 shadow-md mx-auto">
+    <h2 class="text-2xl font-bold mb-4">About This Piece</h2>
+    <p class="text-gray-700 leading-relaxed">
+      This generative art piece explores the beauty of circles and their
+      interactions. Using algorithmic processes, it creates a dynamic display.
+    </p>
+  </div>
+</Layout>

@@ -1,36 +1,201 @@
 ---
-// src/pages/art/animals.astro (example for one of your pieces)
 import Layout from "../../layout/Layout.astro";
 ---
 
 <Layout>
   <title>Animals - Generative Art</title>
 
-  <div class="container mx-auto">
+  <div class="container mx-auto mt-8">
     <nav>
       <a href="/" class="text-blue-400 hover:text-blue-300">← Back to Gallery</a
       >
     </nav>
   </div>
 
-  <h1 class="text-4xl font-bold mb-8 text-center">Animals</h1>
+  <h1 class="text-4xl font-bold mb-8 text-center">ANIMALS</h1>
 
-  <!-- Full-size art canvas -->
-  <div class="bg-gray-800 rounded-lg overflow-hidden mb-8">
-    <canvas id="main-canvas" class="w-full h-96"></canvas>
+  <!-- Full-size art canvas (will be created by p5.js) -->
+
+  <div
+    id="sketch-container"
+    class="bg-gray-800 rounded-lg overflow-hidden mb-8 h-[800px] relative"
+  >
+    <!-- p5.js will insert its canvas here -->
   </div>
 
+  <!-- Load p5.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"
+  ></script>
+
+  <!-- Inline sketch -->
+  <script is:inline>
+    // A p5.js sketch for toddlers to tap cute animals
+    let animals = [];
+    const numAnimals = 20; // Fewer animals for toddlers
+    let score = 0;
+    let animalTypes = ["bunny", "kitten", "puppy", "fox", "bear", "panda"]; // Cute animals
+    let images = {};
+    let lastTouchPosition = { x: 0, y: 0 }; // Track last touch for toddlers
+
+    function setup() {
+      const container = document.getElementById("sketch-container");
+      const w = container.offsetWidth;
+      const h = container.offsetHeight;
+      createCanvas(w, h).parent(container);
+
+      // Create animals spread around the canvas
+      createAnimals(numAnimals);
+    }
+
+    function createAnimals(count) {
+      for (let i = 0; i < count; i++) {
+        // Spread animals randomly around canvas
+        let x = random(50, width - 50);
+        let y = random(70, height - 70);
+        let type = random(animalTypes);
+
+        animals.push(
+          new Animal(
+            x,
+            y,
+            100, // Big size for easier tapping
+            type,
+          ),
+        );
+      }
+    }
+
+    function draw() {
+      background(240, 240, 250, 30); // Light purple background
+
+      // Display score
+      fill(50);
+      textAlign(RIGHT);
+      textSize(40);
+      text(score, width - 40, 60);
+
+      // Check for caught animals and update remaining ones
+      for (let i = animals.length - 1; i >= 0; i--) {
+        let animal = animals[i];
+
+        // Update animal position (just a gentle wiggle)
+        animal.update();
+
+        // Check if animal is touched
+        let touchedAnimal = false;
+
+        // Check if mouse is over animal (for desktop)
+        if (mouseIsPressed) {
+          if (dist(mouseX, mouseY, animal.x, animal.y) < animal.size / 1.5) {
+            touchedAnimal = true;
+          }
+        }
+
+        // Check last touch position (for mobile)
+        if (
+          dist(lastTouchPosition.x, lastTouchPosition.y, animal.x, animal.y) <
+          animal.size / 1.5
+        ) {
+          touchedAnimal = true;
+          // Reset touch position after using it
+          lastTouchPosition = { x: 0, y: 0 };
+        }
+
+        // If animal is touched
+        if (touchedAnimal) {
+          // Simple effect when caught
+          fill(255, 200, 200);
+          noStroke();
+          ellipse(animal.x, animal.y, animal.size);
+
+          // Remove the animal
+          animals.splice(i, 1);
+          score++;
+
+          // Add a new animal
+          if (animals.length < 10) {
+            createAnimals(1);
+          }
+        } else {
+          // Display animal if not caught
+          animal.display();
+        }
+      }
+
+      // If running low on animals, add more
+      if (animals.length < 8) {
+        createAnimals(3);
+      }
+    }
+
+    class Animal {
+      constructor(x, y, size, type) {
+        this.x = x;
+        this.y = y;
+        this.size = size;
+        this.type = type;
+
+        // Animal emojis
+        this.emoji = "🐰"; // Default
+        if (type === "bunny") this.emoji = "🐰";
+        if (type === "kitten") this.emoji = "🐱";
+        if (type === "puppy") this.emoji = "🐶";
+        if (type === "fox") this.emoji = "🦊";
+        if (type === "bear") this.emoji = "🐻";
+        if (type === "panda") this.emoji = "🐼";
+      }
+
+      update() {
+        // Animals don't move - just stay in place for toddlers to tap
+        // We could add a very gentle wiggle here if desired
+      }
+
+      display() {
+        // Draw the animal emoji
+        textSize(this.size);
+        textAlign(CENTER, CENTER);
+        text(this.emoji, this.x, this.y);
+      }
+    }
+
+    // Handle touch events for mobile
+    function touchStarted() {
+      // Store touch position for animal collision detection
+      if (touches.length > 0) {
+        lastTouchPosition.x = touches[0].x;
+        lastTouchPosition.y = touches[0].y;
+      }
+      return false;
+    }
+
+    function touchMoved() {
+      // Update touch position as finger moves
+      if (touches.length > 0) {
+        lastTouchPosition.x = touches[0].x;
+        lastTouchPosition.y = touches[0].y;
+      }
+      return false;
+    }
+
+    function windowResized() {
+      const container = document.getElementById("sketch-container");
+      const w = container.offsetWidth;
+      const h = container.offsetHeight;
+      resizeCanvas(w, h);
+      centerX = w / 2;
+      centerY = h / 2;
+    }
+  </script>
+
   <!-- Art description -->
-  <div class="bg-white rounded-lg p-6 shadow-md">
+  <div class="bg-white rounded-lg mt-8 mb-8 p-6 shadow-md mx-auto">
     <h2 class="text-2xl font-bold mb-4">About This Piece</h2>
     <p class="text-gray-700 leading-relaxed">
-      This generative art piece explores organic movement patterns inspired by
-      animal behavior. Using algorithmic processes, it creates flowing,
-      life-like movements that evoke the essence of creatures in motion.
+      A game for toddlers to tap cute animals! This interactive piece allows
+      young children to explore and interact with adorable animal emojis. Every
+      time they tap an animal, it disappears, and a new one appears, encouraging
+      exploration and play. The gentle animations and soft colors create a
+      calming experience for little ones.
     </p>
   </div>
 </Layout>
-
-<script>
-  // Your actual animals.html JavaScript code goes here
-</script>
