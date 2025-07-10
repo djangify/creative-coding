@@ -84,8 +84,8 @@ function draw() {
   }
 
   // If running low on animals, add more
-  if (animals.length < 5) {
-    createAnimals(3);
+  if (animals.length < 8) {
+    createAnimals(5);
   }
 }
 

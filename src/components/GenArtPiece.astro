@@ -174,7 +174,7 @@ const { id, title, gridClass } = Astro.props;
 
   function initAnimals() {
     let animals = [];
-    const numAnimals = 10;
+    const numAnimals = 30;
     let score = 0;
     let animalTypes = ["bunny", "kitten", "puppy", "fox", "bear", "panda"];
     let lastTouchPosition = { x: 0, y: 0 };
@@ -186,7 +186,7 @@ const { id, title, gridClass } = Astro.props;
         let y = Math.random() * (canvas.height - 200) + 100;
         let type = animalTypes[Math.floor(Math.random() * animalTypes.length)];
 
-        animals.push(new Animal(x, y, 100, type));
+        animals.push(new Animal(x, y, 50, type));
       }
     }
 
@@ -222,7 +222,7 @@ const { id, title, gridClass } = Astro.props;
 
       // Draw score
       ctx.fillStyle = "#333";
-      ctx.font = "40px Arial";
+      ctx.font = "20px Arial";
       ctx.textAlign = "right";
       ctx.fillText(score, canvas.width - 40, 60);
 
@@ -232,8 +232,8 @@ const { id, title, gridClass } = Astro.props;
       }
 
       // Add more animals if needed
-      if (animals.length < 5) {
-        createAnimals(3);
+      if (animals.length < 15) {
+        createAnimals(5);
       }
 
       requestAnimationFrame(animate);
@@ -245,7 +245,7 @@ const { id, title, gridClass } = Astro.props;
         let animal = animals[i];
         let distance = Math.sqrt((x - animal.x) ** 2 + (y - animal.y) ** 2);
 
-        if (distance < animal.size / 1.5) {
+        if (distance < animal.size / 1) {
           // Draw effect
           ctx.fillStyle = "rgba(255, 200, 200, 0.8)";
           ctx.beginPath();
