@@ -173,24 +173,113 @@ const { id, title, gridClass } = Astro.props;
   }
 
   function initAnimals() {
-    // Replace this with your actual animals.html JavaScript code
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const time = Date.now() * 0.001;
+    let animals = [];
+    const numAnimals = 10;
+    let score = 0;
+    let animalTypes = ["bunny", "kitten", "puppy", "fox", "bear", "panda"];
+    let lastTouchPosition = { x: 0, y: 0 };
 
-      // Placeholder: draw some moving "animals" (circles)
-      const colors = ["#ff6b6b", "#4ecdc4", "#45b7d1", "#f9ca24"];
-      for (let i = 0; i < 10; i++) {
-        const x = (Math.sin(time + i * 0.5) * 0.3 + 0.5) * canvas.width;
-        const y = (Math.cos(time * 0.7 + i * 0.3) * 0.3 + 0.5) * canvas.height;
-        ctx.fillStyle = colors[i % colors.length];
-        ctx.beginPath();
-        ctx.arc(x, y, 15, 0, Math.PI * 2);
-        ctx.fill();
+    // Create animals
+    function createAnimals(count) {
+      for (let i = 0; i < count; i++) {
+        let x = Math.random() * (canvas.width - 200) + 100;
+        let y = Math.random() * (canvas.height - 200) + 100;
+        let type = animalTypes[Math.floor(Math.random() * animalTypes.length)];
+
+        animals.push(new Animal(x, y, 100, type));
+      }
+    }
+
+    class Animal {
+      constructor(x, y, size, type) {
+        this.x = x;
+        this.y = y;
+        this.size = size;
+        this.type = type;
+
+        this.emoji = "🐰";
+        if (type === "bunny") this.emoji = "🐰";
+        if (type === "kitten") this.emoji = "🐱";
+        if (type === "puppy") this.emoji = "🐶";
+        if (type === "fox") this.emoji = "🦊";
+        if (type === "bear") this.emoji = "🐻";
+        if (type === "panda") this.emoji = "🐼";
+      }
+
+      display() {
+        ctx.font = `${this.size}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.fillText(this.emoji, this.x, this.y);
+      }
+    }
+
+    // Animation loop
+    function animate() {
+      // Clear canvas with semi-transparent background
+      ctx.fillStyle = "rgba(240, 240, 250, 0.3)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw score
+      ctx.fillStyle = "#333";
+      ctx.font = "40px Arial";
+      ctx.textAlign = "right";
+      ctx.fillText(score, canvas.width - 40, 60);
+
+      // Update and draw animals
+      for (let i = animals.length - 1; i >= 0; i--) {
+        animals[i].display();
+      }
+
+      // Add more animals if needed
+      if (animals.length < 5) {
+        createAnimals(3);
       }
 
       requestAnimationFrame(animate);
     }
+
+    // Handle clicks/touches
+    function handleInteraction(x, y) {
+      for (let i = animals.length - 1; i >= 0; i--) {
+        let animal = animals[i];
+        let distance = Math.sqrt((x - animal.x) ** 2 + (y - animal.y) ** 2);
+
+        if (distance < animal.size / 1.5) {
+          // Draw effect
+          ctx.fillStyle = "rgba(255, 200, 200, 0.8)";
+          ctx.beginPath();
+          ctx.arc(animal.x, animal.y, animal.size, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Remove animal and increase score
+          animals.splice(i, 1);
+          score++;
+
+          // Add new animal
+          if (animals.length < 10) {
+            createAnimals(1);
+          }
+          break;
+        }
+      }
+    }
+
+    // Event listeners
+    canvas.addEventListener("click", (e) => {
+      const rect = canvas.getBoundingClientRect();
+      handleInteraction(e.clientX - rect.left, e.clientY - rect.top);
+    });
+
+    canvas.addEventListener("touchstart", (e) => {
+      e.preventDefault();
+      const rect = canvas.getBoundingClientRect();
+      const touch = e.touches[0];
+      handleInteraction(touch.clientX - rect.left, touch.clientY - rect.top);
+    });
+
+    // Initialize
+    createAnimals(numAnimals);
     animate();
   }
 
