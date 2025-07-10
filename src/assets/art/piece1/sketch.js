@@ -1,153 +1,119 @@
-// Flowing Particles - piece1/sketch.js
-let particles = [];
-let flowField = [];
-let cols, rows;
-let zoff = 0;
-let inc = 0.1;
-let scl = 20;
-let isPlaying = true;
+// Simple random utility functions
+const random = {
+  range: (min, max) => Math.random() * (max - min) + min,
+  rangeFloor: (min, max) => Math.floor(Math.random() * (max - min + 1)) + min
+};
 
-function setup() {
-  let canvas = createCanvas(800, 600);
-  canvas.parent('sketch-container');
-
-  cols = floor(width / scl);
-  rows = floor(height / scl);
-
-  // Initialize flow field
-  flowField = new Array(cols * rows);
-
-  // Create initial particles
-  for (let i = 0; i < 300; i++) {
-    particles.push(new Particle());
-  }
-
-  background(20, 25, 40);
-}
-
-function draw() {
-  if (!isPlaying) return;
-
-  // Create trailing effect
-  fill(20, 25, 40, 25);
-  noStroke();
-  rect(0, 0, width, height);
-
-  // Update flow field
-  let yoff = 0;
-  for (let y = 0; y < rows; y++) {
-    let xoff = 0;
-    for (let x = 0; x < cols; x++) {
-      let index = x + y * cols;
-      let angle = noise(xoff, yoff, zoff) * TWO_PI * 4;
-      let v = p5.Vector.fromAngle(angle);
-      v.setMag(1);
-      flowField[index] = v;
-      xoff += inc;
-    }
-    yoff += inc;
-  }
-  zoff += 0.005;
-
-  // Update and display particles
-  for (let particle of particles) {
-    particle.follow(flowField);
-    particle.update();
-    particle.show();
-    particle.edges();
+class Vector {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
   }
 }
 
-class Particle {
-  constructor() {
-    this.pos = createVector(random(width), random(height));
-    this.vel = createVector(0, 0);
-    this.acc = createVector(0, 0);
-    this.maxSpeed = 2;
-    this.hue = random(360);
-    this.prevPos = this.pos.copy();
+class Agent {
+  constructor(x, y) {
+    this.pos = new Vector(x, y);
+    this.vel = new Vector(random.rangeFloor(-1, 1) * 3, random.range(-1, 1));
+    this.radius = random.range(8, 20);
   }
 
-  follow(vectors) {
-    let x = floor(this.pos.x / scl);
-    let y = floor(this.pos.y / scl);
-    let index = x + y * cols;
-    let force = vectors[index];
-    if (force) {
-      this.applyForce(force);
+  bounce(width, height) {
+    if (this.pos.x <= this.radius) {
+      this.pos.x = this.radius;
+      this.vel.x *= -1;
     }
-  }
-
-  applyForce(force) {
-    this.acc.add(force);
+    if (this.pos.x >= width - this.radius) {
+      this.pos.x = width - this.radius;
+      this.vel.x *= -1;
+    }
+    if (this.pos.y <= this.radius) {
+      this.pos.y = this.radius;
+      this.vel.y *= -1;
+    }
+    if (this.pos.y >= height - this.radius) {
+      this.pos.y = height - this.radius;
+      this.vel.y *= -1;
+    }
   }
 
   update() {
-    this.vel.add(this.acc);
-    this.vel.limit(this.maxSpeed);
-    this.prevPos = this.pos.copy();
-    this.pos.add(this.vel);
-    this.acc.mult(0);
-
-    // Slowly shift hue
-    this.hue = (this.hue + 0.5) % 360;
+    this.pos.x += this.vel.x;
+    this.pos.y += this.vel.y;
   }
 
-  show() {
-    stroke(this.hue, 60, 90, 0.8);
-    strokeWeight(1);
-    line(this.pos.x, this.pos.y, this.prevPos.x, this.prevPos.y);
+  draw(context) {
+    context.save();
+    context.translate(this.pos.x, this.pos.y);
+    context.lineWidth = 4;
+    context.fillStyle = 'silver';
+    context.strokeStyle = 'silver';
+    context.beginPath();
+    context.arc(0, 0, this.radius, 0, Math.PI * 2);
+    context.fill();
+    context.stroke();
+    context.restore();
+  }
+}
 
-    // Add glowing effect
-    stroke(this.hue, 40, 100, 0.3);
-    strokeWeight(3);
-    line(this.pos.x, this.pos.y, this.prevPos.x, this.prevPos.y);
+// Wait for DOM to load
+document.addEventListener('DOMContentLoaded', function () {
+  // Target the existing sketch container
+  const container = document.getElementById('sketch-container');
+
+  // Create canvas and add it to the container
+  const canvas = document.createElement('canvas');
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+  canvas.style.display = 'block';
+
+  container.appendChild(canvas);
+
+  // Set actual canvas dimensions based on container size
+  function resizeCanvas() {
+    const rect = container.getBoundingClientRect();
+    canvas.width = rect.width;
+    canvas.height = rect.height;
   }
 
-  edges() {
-    if (this.pos.x > width) {
-      this.pos.x = 0;
-      this.prevPos.x = 0;
+  resizeCanvas();
+  window.addEventListener('resize', resizeCanvas);
+
+  const context = canvas.getContext('2d');
+  const agents = [];
+
+  // Initialize agents
+  function initAgents() {
+    agents.length = 0; // Clear existing agents
+    const numAgents = Math.min(140, Math.floor((canvas.width * canvas.height) / 8000));
+
+    for (let i = 0; i < numAgents; i++) {
+      const x = random.range(0, canvas.width);
+      const y = random.range(0, canvas.height);
+      agents.push(new Agent(x, y));
     }
-    if (this.pos.x < 0) {
-      this.pos.x = width;
-      this.prevPos.x = width;
-    }
-    if (this.pos.y > height) {
-      this.pos.y = 0;
-      this.prevPos.y = 0;
-    }
-    if (this.pos.y < 0) {
-      this.pos.y = height;
-      this.prevPos.y = height;
-    }
   }
-}
 
-function resetSketch() {
-  particles = [];
-  for (let i = 0; i < 300; i++) {
-    particles.push(new Particle());
+  initAgents();
+
+  // Re-initialize agents when canvas resizes
+  window.addEventListener('resize', function () {
+    setTimeout(initAgents, 100); // Small delay to ensure canvas is resized
+  });
+
+  // Animation loop
+  function animate() {
+    context.fillStyle = 'white';
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    agents.forEach(agent => {
+      agent.update();
+      agent.draw(context);
+      agent.bounce(canvas.width, canvas.height);
+    });
+
+    requestAnimationFrame(animate);
   }
-  background(20, 25, 40);
-}
 
-function togglePlay() {
-  isPlaying = !isPlaying;
-}
-
-function mousePressed() {
-  // Add particles at mouse position
-  for (let i = 0; i < 10; i++) {
-    let p = new Particle();
-    p.pos = createVector(mouseX + random(-20, 20), mouseY + random(-20, 20));
-    particles.push(p);
-  }
-}
-
-function windowResized() {
-  resizeCanvas(800, 600);
-  cols = floor(width / scl);
-  rows = floor(height / scl);
-  flowField = new Array(cols * rows);
-}
+  animate();
+});

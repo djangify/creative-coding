@@ -35,11 +35,9 @@ const { id, title, gridClass } = Astro.props;
       // Import the script content for this piece
       const scriptPath = `/src/assets/art/${id}/script.js`;
 
-      // For now, we'll inline the art logic
-      // You would replace this with your actual art code
       switch (id) {
         case "piece1":
-          initFlowingParticles();
+          initAnimatedDots();
           break;
         case "piece2":
           initGeometricWaves();
@@ -56,23 +54,98 @@ const { id, title, gridClass } = Astro.props;
     }
   }
 
-  // Example art functions - replace with your actual code
-  function initFlowingParticles() {
-    function animate() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      const time = Date.now() * 0.001;
+  // piece1 animated dots
+  function initAnimatedDots() {
+    // Simple random utility functions
+    const random = {
+      range: (min, max) => Math.random() * (max - min) + min,
+      rangeFloor: (min, max) =>
+        Math.floor(Math.random() * (max - min + 1)) + min,
+    };
 
-      for (let i = 0; i < 50; i++) {
-        const x = (Math.sin(time + i * 0.1) * 0.3 + 0.5) * canvas.width;
-        const y = (Math.cos(time + i * 0.15) * 0.3 + 0.5) * canvas.height;
-        ctx.fillStyle = `hsl(${(time * 50 + i * 10) % 360}, 70%, 50%)`;
-        ctx.beginPath();
-        ctx.arc(x, y, 3, 0, Math.PI * 2);
-        ctx.fill();
+    // Vector class
+    class Vector {
+      constructor(x, y) {
+        this.x = x;
+        this.y = y;
       }
+    }
+
+    // Agent class
+    class Agent {
+      constructor(x, y) {
+        this.pos = new Vector(x, y);
+        this.vel = new Vector(
+          random.rangeFloor(-1, 1) * 3,
+          random.range(-1, 1),
+        );
+        this.radius = random.range(8, 20);
+      }
+
+      bounce(width, height) {
+        if (this.pos.x <= this.radius) {
+          this.pos.x = this.radius;
+          this.vel.x *= -1;
+        }
+        if (this.pos.x >= width - this.radius) {
+          this.pos.x = width - this.radius;
+          this.vel.x *= -1;
+        }
+        if (this.pos.y <= this.radius) {
+          this.pos.y = this.radius;
+          this.vel.y *= -1;
+        }
+        if (this.pos.y >= height - this.radius) {
+          this.pos.y = height - this.radius;
+          this.vel.y *= -1;
+        }
+      }
+
+      update() {
+        this.pos.x += this.vel.x;
+        this.pos.y += this.vel.y;
+      }
+
+      draw(context) {
+        context.save();
+        context.translate(this.pos.x, this.pos.y);
+        context.lineWidth = 4;
+        context.fillStyle = "silver";
+        context.strokeStyle = "silver";
+        context.beginPath();
+        context.arc(0, 0, this.radius, 0, Math.PI * 2);
+        context.fill();
+        context.stroke();
+        context.restore();
+      }
+    }
+
+    const agents = [];
+    const numAgents = Math.min(
+      140,
+      Math.floor((canvas.width * canvas.height) / 10000),
+    );
+
+    // Initialize agents
+    for (let i = 0; i < numAgents; i++) {
+      const x = random.range(0, canvas.width);
+      const y = random.range(0, canvas.height);
+      agents.push(new Agent(x, y));
+    }
+
+    function animate() {
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      agents.forEach((agent) => {
+        agent.update();
+        agent.draw(ctx);
+        agent.bounce(canvas.width, canvas.height);
+      });
 
       requestAnimationFrame(animate);
     }
+
     animate();
   }
 

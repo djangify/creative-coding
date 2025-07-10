@@ -3,18 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flowing Particles</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.7.0/p5.min.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <title>Sketch 03 - Bouncing Circles</title>
+    <!-- <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f0f0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        canvas {
+            border: 1px solid #ccc;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+    </style> -->
 </head>
 <body>
-    <div class="container">
-        <div id="sketch-container"></div>
-        <div class="controls">
-            <button onclick="resetSketch()">Reset</button>
-            <button onclick="togglePlay()">Play/Pause</button>
-        </div>
-    </div>
+    <canvas id="canvas"></canvas>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-sketch/0.7.7/canvas-sketch.umd.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/canvas-sketch-util/1.10.0/canvas-sketch-util.umd.js"></script>
     <script src="sketch.js"></script>
 </body>
 </html>
